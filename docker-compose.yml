@@ -1,0 +1,34 @@
+version: '3.3'
+
+services:
+   nginx:
+     image: raulr/nginx-wordpress
+     ports:
+       - 8000:80
+     volumes:
+       - ./wordpress:/var/www/html
+
+   db:
+     image: mysql:5.7
+     volumes:
+       - ./mysql/mysql.sql:/docker-entrypoint-initdb.d/backup.sql       # backup script for your Wordpress db
+       - ./mysql/migrate.sql:/docker-entrypoint-initdb.d/z-migrate.sql  # migration script to change address
+     restart: always
+     environment:
+       MYSQL_ROOT_PASSWORD: somewordpress # replace with secure password, preferably environment variable
+       MYSQL_DATABASE: wordpress
+       MYSQL_USER: wordpress
+       MYSQL_PASSWORD: wordpress # replace with secure password, preferably environment variable
+
+   wordpress:
+     depends_on:
+       - db
+     image: wordpress:fpm
+     volumes:
+        - ./wordpress:/var/www/html     
+     restart: always
+     environment:
+       WORDPRESS_DB_HOST: db:3306
+       WORDPRESS_DB_USER: wordpress
+       WORDPRESS_DB_PASSWORD: wordpress # replace with secure password, preferably environment variable
+       WORDPRESS_DB_NAME: wordpress
